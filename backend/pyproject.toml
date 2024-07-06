@@ -1,0 +1,49 @@
+
+[tool.poetry]
+name = "ragmind-monorepo"
+version = "0.0.1"
+description = "RAGMind monorepo"
+authors = ["admin <admin@yyassif.dev"]
+readme = "README.md"
+
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+[tool.poetry.group.dev.dependencies]
+ragmind-core = { path = "core", develop = true }
+ragmind-api = { path = "api", develop = true }
+torch = [
+    { version = "2.3.1", source = "pypi", platform = "darwin" },
+    { version = "2.3.1", source = "pypi", platform = "linux", markers = "platform_machine != 'x86_64'" },
+    { version = "2.3.1+cpu", source = "pytorch-cpu-src", platform = "linux", markers = "platform_machine == 'x86_64'" },
+    { version = "2.3.1+cpu", source = "pytorch-cpu-src", platform = "win32" },
+]
+torchvision = [
+    { version = "0.18.1", source = "pypi", platform = "darwin" },
+    { version = "0.18.1", source = "pypi", platform = "linux", markers = "platform_machine != 'x86_64'" },
+    { version = "0.18.1+cpu", source = "pytorch-cpu-src", platform = "linux", markers = "platform_machine == 'x86_64'" },
+    { version = "0.18.1+cpu", source = "pytorch-cpu-src", platform = "win32" },
+]
+mypy = "^1.10.0"
+pre-commit = "^3.7.1"
+ipykernel = "*"
+ruff = "^0.4.8"
+flake8 = "*"
+flake8-black = "*"
+
+[tool.poetry.group.test.dependencies]
+pytest = "*"
+pytest-asyncio = "^0.23.7"
+pytest-dotenv = "*"
+pytest-mock = "*"
+pytest-celery = "*"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[[tool.poetry.source]]
+name = "pytorch-cpu-src"
+url = "https://download.pytorch.org/whl/cpu"
+priority = "explicit"

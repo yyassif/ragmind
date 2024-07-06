@@ -1,0 +1,71 @@
+.small {
+  @apply min-w-3 min-h-3 max-w-3 max-h-3;
+}
+
+.normal {
+  @apply min-w-4 min-h-4 max-w-4 max-h-4;
+}
+
+.large {
+  @apply min-w-6 min-h-6 max-w-6 max-h-6;
+}
+
+.big {
+  @apply min-w-8 min-h-8 max-w-8 max-h-8;
+}
+
+.black {
+  @apply text-gray-900;
+
+  &.hovered {
+    @apply text-purple-700;
+  }
+}
+
+.dark-grey {
+  @apply text-gray-600;
+}
+
+.grey {
+  @apply text-gray-400;
+}
+
+.primary {
+  @apply text-purple-700;
+}
+
+.accent {
+  @apply text-teal-500;
+}
+
+.gold {
+  @apply text-yellow-700;
+}
+
+.white {
+  @apply text-white;
+}
+
+.dangerous {
+  @apply text-red-800;
+
+  &.hovered {
+    @apply text-red-700;
+  }
+}
+
+.warning {
+  @apply text-yellow-700;
+}
+
+.success {
+  @apply text-green-600;
+}
+
+.disabled {
+  @apply text-gray-900 pointer-events-none opacity-20;
+}
+
+.hovered {
+  @apply cursor-pointer;
+}

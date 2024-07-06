@@ -1,0 +1,11 @@
+.tag_wrapper {
+  @apply text-xs p-1 rounded-xl w-fit;
+
+  &.primary {
+    @apply bg-purple-300;
+  }
+
+  &.gold {
+    @apply bg-yellow-700;
+  }
+}

@@ -1,0 +1,116 @@
+{
+  "$schema": "https://mintlify.com/schema.json",
+  "name": "RAGMind",
+  "favicon": "/favicon.svg",
+  "colors": {
+    "primary": "#0D9373",
+    "light": "#07C983",
+    "dark": "#0D9373",
+    "anchors": {
+      "from": "#0D9373",
+      "to": "#07C983"
+    }
+  },
+  "topbarLinks": [
+    {
+      "name": "Support",
+      "url": "mailto:admin@yyassif.dev"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Try RAGMind",
+    "url": "https://yyassif.dev"
+  },
+  "anchors": [
+    {
+      "name": "Community",
+      "icon": "discord",
+      "url": "https://discord.gg/HUpRgp2HG8"
+    },
+    {
+      "name": "API Docs",
+      "icon": "globe",
+      "url": "https://api.yyassif.dev/docs"
+    },
+    {
+      "name": "Status",
+      "icon": "signal",
+      "url": "https://uptime.yyassif.dev"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Welcome to RAGMind",
+      "pages": [
+        "intro",
+        "install",
+        {
+          "group": "Features",
+          "icon": "lightbulb",
+          "pages": [
+            "features/brain-creation",
+            "features/brain-sharing",
+            "features/assistants",
+            "features/chat",
+            "features/analytics",
+            "features/brain-customisation"
+          ]
+        },
+        {
+          "group": "Configuring",
+          "icon": "gear",
+          "pages": [
+            "configuring/authentication",
+            "configuring/new-model",
+            "configuring/resend-emails",
+            "configuring/reranking",
+            "configuring/llamaparse",
+            "configuring/environment-variables",
+            "configuring/profiler",
+            "configuring/telemetry",
+            "configuring/supabase-setup",
+            "configuring/brave-search"
+          ]
+        },
+        "tech-design",
+        "contact-us"
+      ]
+    },
+    {
+      "group": "Deploy RAGMind",
+      "pages": [
+        "deployment/aws",
+        "deployment/vercel"
+      ]
+    },
+    {
+      "group": "Brains",
+      "pages": [
+        "brains/docs-and-urls",
+        "brains/gpt4",
+        "brains/sql"
+      ]
+    },
+    {
+      "group": "Assistants",
+      "pages": [
+        "agents/summary"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "github": "https://github.com/yyassif/ragmind"
+  },
+  "openapi": "https://api.yyassif.dev/openapi.json",
+  "feedback": {
+    "thumbsRating": true,
+    "raiseIssue": true,
+    "suggestEdit": true
+  },
+  "api": {
+    "baseUrl": "https://api.yyassif.dev",
+    "auth": {
+      "method": "bearer"
+    }
+  }
+}

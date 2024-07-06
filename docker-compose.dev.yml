@@ -1,0 +1,92 @@
+name: development
+
+services:
+  backend-core:
+    image: backend-base:latest
+    container_name: backend-core
+    pull_policy: never
+    restart: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    env_file:
+      - .env
+    build:
+      context: backend
+      dockerfile: Dockerfile.dev
+      cache_from:
+        - backend-base:latest
+      args:
+        - DEV_MODE=true
+    volumes:
+      - ./backend/:/code/
+    command:
+      - "uvicorn"
+      - "ragmind_api.main:app"
+      - "--reload"
+      - "--host"
+      - "0.0.0.0"
+      - "--port"
+      - "5050"
+      - "--log-level"
+      - "info"
+    ports:
+      - 5050:5050
+      - 5678:5678 # Debugging Port
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    restart: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - 6379:6379
+
+  worker:
+    image: backend-base:latest
+    container_name: worker
+    pull_policy: never
+    restart: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    env_file:
+      - .env
+    volumes:
+      - ./backend/:/code/
+    command: "celery -A ragmind_api.celery_worker worker -l info"
+    depends_on:
+      - redis
+
+  beat:
+    image: backend-base:latest
+    container_name: beat
+    pull_policy: never
+    restart: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    env_file:
+      - .env
+    command: celery -A ragmind_api.celery_worker beat -l info
+    volumes:
+      - ./backend/:/code/
+    depends_on:
+      - redis
+
+  flower:
+    image: backend-base:latest
+    container_name: flower
+    pull_policy: never
+    restart: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    env_file:
+      - .env
+    command: celery -A ragmind_api.celery_worker flower -l info --port=5555
+    volumes:
+      - ./backend/:/code/
+    depends_on:
+      - redis
+      - worker
+      - beat
+    ports:
+      - 5555:5555
