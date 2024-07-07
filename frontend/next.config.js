@@ -7,7 +7,13 @@ const nextConfig = {
         hostname: "yyassif.dev",
       },
       {
+        hostname: "yyasif.dev",
+      },
+      {
         hostname: "chat.yyassif.dev",
+      },
+      {
+        hostname: "ragmind.yyasif.dev",
       },
       {
         hostname: "ragmind.s3.eu-west-3.amazonaws.com",
@@ -37,6 +43,7 @@ const ContentSecurityPolicy = {
     "https://fonts.googleapis.com",
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     "https://chat.yyassif.dev",
+    "https://ragmind.yyasif.dev",
     "https://*.vercel.app",
     process.env.NEXT_PUBLIC_FRONTEND_URL,
   ],
@@ -63,6 +70,7 @@ const ContentSecurityPolicy = {
     process.env.NEXT_PUBLIC_FRONTEND_URL,
     "https://ragmind.s3.eu-west-3.amazonaws.com",
     "https://chat.yyassif.dev",
+    "https://ragmind.yyasif.dev",
     "https://*.vercel.app",
   ],
   "script-src": [
