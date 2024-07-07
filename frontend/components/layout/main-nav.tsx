@@ -41,7 +41,7 @@ export function MainNav({ items, children }: MainNavProps): JSX.Element {
   return (
     <div className="flex gap-6 md:gap-10">
       <Link href="/" className="hidden items-center space-x-2 md:flex">
-        <SiteLogo size={24} />
+        <SiteLogo size={24} className="w-auto h-6" />
         <span className="hidden font-urban text-xl font-bold sm:inline-block">
           {siteConfig.name}
         </span>

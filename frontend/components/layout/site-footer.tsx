@@ -12,7 +12,7 @@ export default function SiteFooter({
     <footer className={cn(className, "border-t")}>
       <div className="container flex h-12 flex-row items-center justify-between gap-4">
         <div className="flex flex-row items-center gap-4 md:gap-2 md:px-0">
-          <SiteLogo size={16} />
+          <SiteLogo size={16} className="w-auto h-4" />
           <p className="text-center text-sm leading-loose md:text-left">
             Built by{" "}
             <a

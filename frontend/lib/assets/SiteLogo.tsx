@@ -1,11 +1,17 @@
 import Image from "next/image";
 import { Fragment } from "react";
 
+import { cn } from "@/lib/utils";
+
 interface SiteLogoLogoProps {
   size: number;
+  className?: string;
 }
 
-export default function SiteLogo({ size }: SiteLogoLogoProps): JSX.Element {
+export default function SiteLogo({
+  size,
+  className,
+}: SiteLogoLogoProps): JSX.Element {
   return (
     <Fragment>
       <Image
@@ -13,7 +19,7 @@ export default function SiteLogo({ size }: SiteLogoLogoProps): JSX.Element {
         alt="RAGMind Logo Light Mode"
         width={size}
         height={size}
-        className="dark:hidden"
+        className={cn("dark:hidden", className)}
       />
 
       <Image
@@ -21,7 +27,7 @@ export default function SiteLogo({ size }: SiteLogoLogoProps): JSX.Element {
         alt="RAGMind Logo Dark Mode"
         width={size}
         height={size}
-        className="hidden dark:block"
+        className={cn("hidden dark:block", className)}
       />
     </Fragment>
   );

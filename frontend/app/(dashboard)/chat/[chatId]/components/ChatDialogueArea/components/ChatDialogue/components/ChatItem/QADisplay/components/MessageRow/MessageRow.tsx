@@ -84,7 +84,7 @@ export const MessageRow = ({
     if (!isUserSpeaker && messageContent !== "🧠") {
       return (
         <div className="flex flex-col gap-2 left-1 top-[calc(100%_+_0.5rem)]">
-          <div className="flex gap-3 w-full justify-end pt-2 pb-4 border-b-foreground border-b border-solid">
+          <div className="flex gap-3 w-full justify-end py-2">
             <CopyButton handleCopy={handleCopy} />
             <ThumbsUp
               className={cn(
@@ -152,8 +152,8 @@ export const MessageRow = ({
         originY: 0.5,
       }}
       className={cn(
-        "flex flex-col gap-2 border-b-foreground relative pr-4 pb-4 border-b border-solid whitespace-pre-wrap",
-        isUserSpeaker ? "text-3xl font-medium border-b-[none];" : "",
+        "flex flex-col gap-2 relative pr-4 pb-4 whitespace-pre-wrap",
+        isUserSpeaker ? "text-3xl font-medium border-b-[none]" : "",
         messageContent.length > 100 && isUserSpeaker ? "text-lg" : "",
         lastMessage ? "border-b-[none]" : ""
       )}

@@ -47,7 +47,7 @@ export default async function AuthLayout({
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background to-background/60 md:to-background/40" />
         <div className="relative z-20 flex items-center text-lg font-medium">
-          <SiteLogo size={24} />
+          <SiteLogo size={24} className="w-auto h-6" />
           <span>RAGMind</span>
         </div>
       </div>

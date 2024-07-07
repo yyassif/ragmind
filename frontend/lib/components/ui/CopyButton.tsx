@@ -35,7 +35,7 @@ export const CopyButton = ({ handleCopy }: CopyButtonProps): JSX.Element => {
       <Icon
         name={isCopied ? "checkCircle" : "copy"}
         color={isCopied ? "primary" : "black"}
-        size="small"
+        size="normal"
         handleHover={true}
       />
     </button>
