@@ -42,9 +42,9 @@ const ContentSecurityPolicy = {
     "'self'",
     "https://fonts.googleapis.com",
     process.env.NEXT_PUBLIC_SUPABASE_URL,
-    "https://chat.yyassif.dev",
-    "https://ragmind.yyasif.dev",
+    "https://*.yyassif.dev",
     "https://*.vercel.app",
+    "https://*.yyasif.dev",
     process.env.NEXT_PUBLIC_FRONTEND_URL,
   ],
   "connect-src": [
@@ -69,9 +69,9 @@ const ContentSecurityPolicy = {
     "https://user-images.githubusercontent.com",
     process.env.NEXT_PUBLIC_FRONTEND_URL,
     "https://ragmind.s3.eu-west-3.amazonaws.com",
-    "https://chat.yyassif.dev",
-    "https://ragmind.yyasif.dev",
     "https://*.vercel.app",
+    "https://*.yyassif.dev",
+    "https://*.yyasif.dev",
   ],
   "script-src": [
     "'unsafe-inline'",
@@ -79,6 +79,7 @@ const ContentSecurityPolicy = {
     "https://va.vercel-scripts.com/",
     process.env.NEXT_PUBLIC_FRONTEND_URL,
     "https://*.vercel.app",
+    "https://*.yyasif.dev",
     "https://www.google-analytics.com/",
   ],
   "frame-ancestors": ["'none'"],
@@ -86,6 +87,7 @@ const ContentSecurityPolicy = {
     "'unsafe-inline'",
     process.env.NEXT_PUBLIC_FRONTEND_URL,
     "https://*.vercel.app",
+    "https://*.yyasif.dev",
   ],
 };
 
