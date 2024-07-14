@@ -1,20 +1,24 @@
 import logging
 from operator import itemgetter
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Optional, Sequence
 
 from langchain.retrievers import ContextualCompressionRetriever
-from langchain_cohere import CohereRerank
-from langchain_community.chat_models import ChatLiteLLM
+from langchain_core.callbacks import Callbacks
+from langchain_core.documents import BaseDocumentCompressor, Document
+from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.messages.ai import AIMessageChunk
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 from langchain_core.vectorstores import VectorStore
-from langchain_openai import ChatOpenAI
+
+from ragmind_core.chat import ChatHistory
 from ragmind_core.config import RAGConfig
+from ragmind_core.llm import LLMEndpoint
 from ragmind_core.models import (
     ParsedRAGChunkResponse,
     ParsedRAGResponse,
     RAGMindKnowledge,
+    RAGResponseMetadata,
     cited_answer,
 )
 from ragmind_core.prompts import ANSWER_PROMPT, CONDENSE_QUESTION_PROMPT
@@ -22,12 +26,20 @@ from ragmind_core.utils import (
     combine_documents,
     format_file_list,
     get_chunk_metadata,
-    model_supports_function_calling,
     parse_chunk_response,
     parse_response,
 )
 
 logger = logging.getLogger(__name__)
+
+class IdempotentCompressor(BaseDocumentCompressor):
+    def compress_documents(
+        self,
+        documents: Sequence[Document],
+        query: str,
+        callbacks: Optional[Callbacks] = None,
+    ) -> Sequence[Document]:
+        return documents
 
 
 class RAGMindQARAG:
@@ -35,66 +47,46 @@ class RAGMindQARAG:
         self,
         *,
         rag_config: RAGConfig,
-        llm: ChatLiteLLM,
+        llm: LLMEndpoint,
         vector_store: VectorStore,
+        reranker: BaseDocumentCompressor | None = None,
     ):
         self.rag_config = rag_config
         self.vector_store = vector_store
-        self.llm = llm
-        self.reranker = self._create_reranker()
-        self.supports_func_calling = model_supports_function_calling(self.rag_config.model)
+        self.llm_endpoint = llm
+        self.reranker = reranker if reranker is not None else IdempotentCompressor()
 
     @property
     def retriever(self):
         return self.vector_store.as_retriever()
 
-    def _create_reranker(self):
-        # TODO: reranker config
-        # if os.getenv("COHERE_API_KEY"):
-        compressor = CohereRerank(top_n=20)
-        # else:
-        #     ranker_model_name = "ms-marco-TinyBERT-L-2-v2"
-        # flashrank_client = Ranker(model_name=ranker_model_name)
-        # compressor = FlashrankRerank(
-        #     client=flashrank_client, model=ranker_model_name, top_n=20
-        # )
-        # TODO fix
-        return compressor
-
-    # TODO : refactor and simplify
     def filter_history(
-        self, chat_history, max_history: int = 10, max_tokens: int = 2000
+        self,
+        chat_history: ChatHistory,
     ):
         """
         Filter out the chat history to only include the messages that are relevant to the current question
 
-        Takes in a chat_history= [HumanMessage(content='Question?'), AIMessage(content="Answer.")]
-        Returns a filtered chat_history with in priority: first max_tokens, then max_history where a Human message and an AI message count as one pair
-        a token is 4 characters
+        Takes in a chat_history= [HumanMessage(content='Question'), AIMessage(content="Answer.")]
+        Returns a filtered chat_history with in priority: first max_tokens, then max_history where a Human message and an AI message count as one pair a token is 4 characters
         """
-        chat_history = chat_history[::-1]
         total_tokens = 0
         total_pairs = 0
-        filtered_chat_history = []
-        for i in range(0, len(chat_history), 2):
-            if i + 1 < len(chat_history):
-                human_message = chat_history[i]
-                ai_message = chat_history[i + 1]
-                message_tokens = (
-                    len(human_message.content) + len(ai_message.content)
-                ) // 4
-                if (
-                    total_tokens + message_tokens > max_tokens
-                    or total_pairs >= max_history
-                ):
-                    break
-                filtered_chat_history.append(human_message)
-                filtered_chat_history.append(ai_message)
-                total_tokens += message_tokens
-                total_pairs += 1
-        chat_history = filtered_chat_history[::-1]
+        filtered_chat_history: list[AIMessage | HumanMessage] = []
+        for human_message, ai_message in chat_history.iter_pairs():
+            # TODO: replace with tiktoken
+            message_tokens = (len(human_message.content) + len(ai_message.content)) // 4
+            if (
+                total_tokens + message_tokens > self.rag_config.llm_config.max_tokens
+                or total_pairs >= self.rag_config.max_history
+            ):
+                break
+            filtered_chat_history.append(human_message)
+            filtered_chat_history.append(ai_message)
+            total_tokens += message_tokens
+            total_pairs += 1
 
-        return chat_history
+        return filtered_chat_history[::-1]
 
     def build_chain(self, files: str):
         compression_retriever = ContextualCompressionRetriever(
@@ -114,7 +106,7 @@ class RAGMindQARAG:
                 "chat_history": itemgetter("chat_history"),
             }
             | CONDENSE_QUESTION_PROMPT
-            | self.llm
+            | self.llm_endpoint._llm
             | StrOutputParser(),
         }
 
@@ -132,22 +124,10 @@ class RAGMindQARAG:
             "files": lambda _: files,  # TODO: shouldn't be here
         }
 
-        # Override llm if we have a OpenAI model
-        llm = self.llm
-        if self.supports_func_calling:
-            if self.rag_config.temperature:
-                llm_function = ChatOpenAI(
-                    max_tokens=self.rag_config.max_tokens,
-                    model=self.rag_config.model,
-                    temperature=self.rag_config.temperature,
-                )
-            else:
-                llm_function = ChatOpenAI(
-                    max_tokens=self.rag_config.max_tokens,
-                    model=self.rag_config.model,
-                )
-
-            llm = llm_function.bind_tools(
+        # Bind the llm to cited_answer if model supports it
+        llm = self.llm_endpoint._llm
+        if self.llm_endpoint.supports_func_calling():
+            llm = self.llm_endpoint._llm.bind_tools(
                 [cited_answer],
                 tool_choice="any",
             )
@@ -162,7 +142,7 @@ class RAGMindQARAG:
     def answer(
         self,
         question: str,
-        history: list[dict[str, str]],
+        history: ChatHistory,
         list_files: list[RAGMindKnowledge],
         metadata: dict[str, str] = {},
     ) -> ParsedRAGResponse:
@@ -176,13 +156,13 @@ class RAGMindQARAG:
             },
             config={"metadata": metadata},
         )
-        response = parse_response(raw_llm_response, self.rag_config.model)
+        response = parse_response(raw_llm_response, self.rag_config.llm_config.model)
         return response
 
     async def answer_astream(
         self,
         question: str,
-        history: list[dict[str, str]],
+        history: ChatHistory,
         list_files: list[RAGMindKnowledge],
         metadata: dict[str, str] = {},
     ) -> AsyncGenerator[ParsedRAGChunkResponse, ParsedRAGChunkResponse]:
@@ -191,6 +171,7 @@ class RAGMindQARAG:
 
         rolling_message = AIMessageChunk(content="")
         sources = []
+        prev_answer = ""
 
         async for chunk in conversational_qa_chain.astream(
             {
@@ -205,18 +186,29 @@ class RAGMindQARAG:
                 sources = chunk["docs"] if "docs" in chunk else []
 
             if "answer" in chunk:
-                rolling_message, parsed_chunk = parse_chunk_response(
+                rolling_message, answer_str = parse_chunk_response(
                     rolling_message,
                     chunk,
-                    self.supports_func_calling,
+                    self.llm_endpoint.supports_func_calling(),
                 )
 
-                if self.supports_func_calling and len(parsed_chunk.answer) > 0:
-                    yield parsed_chunk
-                else:
-                    yield parsed_chunk
+                if len(answer_str) > 0:
+                    if self.llm_endpoint.supports_func_calling():
+                        diff_answer = answer_str[len(prev_answer) :]
+                        if len(diff_answer) > 0:
+                            parsed_chunk = ParsedRAGChunkResponse(
+                                answer=diff_answer,
+                                metadata=RAGResponseMetadata(),
+                            )
+                            prev_answer += diff_answer
+                            yield parsed_chunk
+                    else:
+                        yield ParsedRAGChunkResponse(
+                            answer=answer_str,
+                            metadata=RAGResponseMetadata(),
+                        )
 
-        # Last chunk provies
+        # Last chunk provides metadata
         yield ParsedRAGChunkResponse(
             answer="",
             metadata=get_chunk_metadata(rolling_message, sources),

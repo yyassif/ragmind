@@ -6,6 +6,7 @@ import tiktoken
 from langchain.schema import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from llama_parse import LlamaParse
+from llama_parse.utils import ResultType
 from ragmind_api.logger import get_logger
 from ragmind_api.models.files import File
 from ragmind_api.modules.brain.service.brain_vector_service import BrainVectorService
@@ -39,7 +40,7 @@ def process_file(
             document_tmp.write(doc.file.read())
 
             parser = LlamaParse(
-                result_type="markdown",  # "markdown" and "text" are available
+                result_type=ResultType.MD, # "MD" and "TXT" are available
                 parsing_instruction="Extract the tables and transform checkboxes into text. Transform tables to key = value. You can duplicates Keys if needed. For example: Productions Fonts = 300 productions Fonts Company Desktop License = Yes for Maximum of 60 Licensed Desktop users For example checkboxes should be: Premium Activated = Yes License Premier = No If a checkbox is present for a table with multiple options.  Say Yes for the one activated and no for the one not activated. Format using headers.",
                 gpt4o_mode=True,
                 gpt4o_api_key=os.getenv("OPENAI_API_KEY"),

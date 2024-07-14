@@ -2,6 +2,7 @@ from uuid import UUID
 
 from fastapi import HTTPException
 from ragmind_api.models.settings import get_supabase_client
+from ragmind_api.modules.knowledge.dto.inputs import KnowledgeStatus
 from ragmind_api.modules.knowledge.dto.outputs import DeleteKnowledgeResponse
 from ragmind_api.modules.knowledge.entity.knowledge import Knowledge
 from ragmind_api.modules.knowledge.repository.knowledge_interface import (
@@ -22,8 +23,8 @@ class KnowledgeRepository(KnowledgeInterface):
         knowledge_exists = (
             self.db.from_("knowledge")
             .select("*")
-            .filter("brain_id", "eq", knowledge.brain_id)
-            .filter("file_name", "eq", knowledge.file_name)
+            .filter("brain_id", "eq", str(knowledge.brain_id))
+            .filter("file_name", "eq", str(knowledge.file_name))
             .execute()
         ).data
 
@@ -48,7 +49,7 @@ class KnowledgeRepository(KnowledgeInterface):
         response = (
             self.db.from_("knowledge")
             .delete()
-            .filter("id", "eq", knowledge_id)
+            .filter("id", "eq", str(knowledge_id))
             .execute()
             .data
         )
@@ -111,3 +112,16 @@ class KnowledgeRepository(KnowledgeInterface):
         self.db.from_("knowledge").delete().filter(
             "brain_id", "eq", str(brain_id)
         ).execute()
+
+    def update_status_knowledge(self, knowledge_id: UUID, status: KnowledgeStatus):
+        """
+        Update the status of a knowledge
+        """
+        updated_knowledge = (
+            self.db.from_("knowledge")
+            .update({"status": status})
+            .filter("id", "eq", str(knowledge_id))
+            .execute()
+        ).data
+
+        return True

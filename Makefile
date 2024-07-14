@@ -1,9 +1,12 @@
 test:
 	pytest backend/
 
-dev:
+dev-build:
 	DOCKER_BUILDKIT=1 docker compose -f docker-compose.dev.yml build backend-core
 	DOCKER_BUILDKIT=1 docker compose -f docker-compose.dev.yml up --build
+
+dev:
+	DOCKER_BUILDKIT=1 docker compose -f docker-compose.dev.yml up
 
 prod:
 	docker compose build backend-core

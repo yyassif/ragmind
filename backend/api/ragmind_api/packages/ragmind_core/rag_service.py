@@ -90,6 +90,7 @@ class RAGService:
         assert brain
 
         if brain.integration:
+            # TODO: entity should be UUID
             assert brain.integration.user_id == str(user_id)
         return brain
 

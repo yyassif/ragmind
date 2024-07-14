@@ -2,9 +2,9 @@ import os
 from typing import AsyncGenerator, Callable, Generic, Type, TypeVar
 
 from fastapi import Depends
-from ragmind_api.models.settings import settings
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlmodel.ext.asyncio.session import AsyncSession
+from ragmind_api.models.settings import settings
 
 
 class BaseRepository:

@@ -1,6 +1,7 @@
-import os
 from datetime import datetime, timedelta, timezone
 from io import BytesIO
+import uuid
+import os
 
 import msal
 import requests
@@ -77,11 +78,12 @@ class AzureSyncUtils(BaseModel):
         """
         logger.info("Downloading Azure files with metadata: %s", files)
         headers = self.get_headers(token_data)
-
         downloaded_files = []
+        # Generate random UUID
+        bulk_id = uuid.uuid4()
         for file in files:
             try:
-                file_id = file["id"]
+                file_id = str(file["id"])
                 file_name = file["name"]
                 modified_time = file["last_modified"]
 
@@ -139,7 +141,7 @@ class AzureSyncUtils(BaseModel):
                 supported = False
                 if (existing_file and existing_file.supported) or not existing_file:
                     supported = True
-                    await upload_file(to_upload_file, brain_id, current_user)
+                    await upload_file(to_upload_file, brain_id, current_user, bulk_id)
 
                 if existing_file:
                     # Update the existing file record

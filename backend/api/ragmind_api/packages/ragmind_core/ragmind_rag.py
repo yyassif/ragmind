@@ -1,10 +1,12 @@
 import logging
 from operator import itemgetter
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Optional, Sequence
 
 from langchain.retrievers import ContextualCompressionRetriever
 from langchain_cohere import CohereRerank
 from langchain_community.chat_models import ChatLiteLLM
+from langchain_core.callbacks import Callbacks
+from langchain_core.documents import BaseDocumentCompressor, Document
 from langchain_core.messages.ai import AIMessageChunk
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
@@ -15,6 +17,7 @@ from ragmind_api.packages.ragmind_core.config import RAGConfig
 from ragmind_api.packages.ragmind_core.models import (
     ParsedRAGChunkResponse,
     ParsedRAGResponse,
+    RAGResponseMetadata,
     cited_answer,
 )
 from ragmind_api.packages.ragmind_core.prompts import (
@@ -31,6 +34,15 @@ from ragmind_api.packages.ragmind_core.utils import (
 )
 
 logger = logging.getLogger(__name__)
+
+class IdempotentCompressor(BaseDocumentCompressor):
+    def compress_documents(
+        self,
+        documents: Sequence[Document],
+        query: str,
+        callbacks: Optional[Callbacks] = None,
+    ) -> Sequence[Document]:
+        return documents
 
 
 class RAGMindQARAG:
@@ -55,13 +67,12 @@ class RAGMindQARAG:
 
     def _create_reranker(self):
         # TODO: reranker config
-        compressor = CohereRerank(top_n=20)
-        # else:
-        #     ranker_model_name = "ms-marco-TinyBERT-L-2-v2"
-        #     flashrank_client = Ranker(model_name=ranker_model_name)
-        #     compressor = FlashrankRerank(
-        #         client=flashrank_client, model=ranker_model_name, top_n=20
-        #     ) # TODO fix
+        try:
+            compressor = CohereRerank(top_n=20)
+        except Exception as e:
+            logger.exception(f"Can't load Cohere reranker: {e}")
+            compressor = IdempotentCompressor()
+
         return compressor
 
     # TODO : refactor and simplify
@@ -194,6 +205,7 @@ class RAGMindQARAG:
 
         rolling_message = AIMessageChunk(content="")
         sources = []
+        prev_answer = ""
 
         async for chunk in conversational_qa_chain.astream(
             {
@@ -208,18 +220,29 @@ class RAGMindQARAG:
                 sources = chunk["docs"] if "docs" in chunk else []
 
             if "answer" in chunk:
-                rolling_message, parsed_chunk = parse_chunk_response(
+                rolling_message, answer_str = parse_chunk_response(
                     rolling_message,
                     chunk,
                     self.supports_func_calling,
                 )
 
-                if self.supports_func_calling and len(parsed_chunk.answer) > 0:
-                    yield parsed_chunk
-                else:
-                    yield parsed_chunk
+                if len(answer_str) > 0:
+                    if self.supports_func_calling:
+                        diff_answer = answer_str[len(prev_answer) :]
+                        if len(diff_answer) > 0:
+                            parsed_chunk = ParsedRAGChunkResponse(
+                                answer=diff_answer,
+                                metadata=RAGResponseMetadata(),
+                            )
+                            prev_answer += diff_answer
+                            yield parsed_chunk
+                    else:
+                        yield ParsedRAGChunkResponse(
+                            answer=answer_str,
+                            metadata=RAGResponseMetadata(),
+                        )
 
-        # Last chunk provies
+        # Last chunk provides metadata
         yield ParsedRAGChunkResponse(
             answer="",
             metadata=get_chunk_metadata(rolling_message, sources),

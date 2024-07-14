@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from ragmind_api.logger import get_logger
-from ragmind_api.modules.knowledge.dto.inputs import CreateKnowledgeProperties
+from ragmind_api.modules.knowledge.dto.inputs import CreateKnowledgeProperties, KnowledgeStatus
 from ragmind_api.modules.knowledge.entity.knowledge import Knowledge
 from ragmind_api.modules.knowledge.repository.knowledge_interface import (
     KnowledgeInterface,
@@ -26,6 +26,11 @@ class KnowledgeService:
         knowledges = self.repository.get_all_knowledge_in_brain(brain_id)
 
         return knowledges
+    
+    def update_status_knowledge(self, knowledge_id: UUID, status: KnowledgeStatus):
+        knowledge = self.repository.update_status_knowledge(knowledge_id, status)
+
+        return knowledge
 
     def get_knowledge(self, knowledge_id: UUID) -> Knowledge:
         knowledge = self.repository.get_knowledge_by_id(knowledge_id)
