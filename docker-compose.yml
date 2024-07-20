@@ -3,7 +3,7 @@ name: production
 services:
   frontend:
     image: yyassif/ragmind-frontend:latest
-    pull_policy: if_not_present
+    pull_policy: always
     container_name: web
     restart: always
     environment:
@@ -20,7 +20,7 @@ services:
 
   backend-core:
     image: yyassif/ragmind-backend:latest
-    pull_policy: if_not_present
+    pull_policy: always
     container_name: backend-core
     restart: always
     env_file:
@@ -46,10 +46,26 @@ services:
     ports:
       - 6379:6379
 
+  notifier:
+    image: yyassif/ragmind-backend:latest
+    container_name: notifier
+    pull_policy: always
+    restart: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    env_file:
+      - .env
+    command:
+      - "python"
+      - "/code/api/ragmind_api/celery_monitor.py"
+    depends_on:
+      - redis
+      - worker
+
   worker:
-    pull_policy: if_not_present
     image: yyassif/ragmind-backend:latest
     container_name: worker
+    pull_policy: always
     restart: always
     env_file:
       - .env
@@ -61,7 +77,7 @@ services:
 
   beat:
     image: yyassif/ragmind-backend:latest
-    pull_policy: if_not_present
+    pull_policy: always
     container_name: beat
     restart: always
     env_file:
@@ -74,7 +90,7 @@ services:
 
   flower:
     image: yyassif/ragmind-backend:latest
-    pull_policy: if_not_present
+    pull_policy: always
     container_name: flower
     restart: always
     env_file:

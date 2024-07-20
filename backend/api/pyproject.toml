@@ -12,7 +12,7 @@ readme = "README.md"
 
 
 [tool.poetry.dependencies]
-ragmind-core = { path = "../core", develop = true }
+ragmind-core = { path = "../core", extras = ["base"] }
 python = "^3.11"
 
 torch = [

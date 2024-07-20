@@ -8,8 +8,8 @@ from ragmind_api.middlewares.auth import AuthBearer, get_current_user
 from ragmind_api.models.settings import get_embedding_client, get_supabase_client
 from ragmind_api.modules.brain.service.brain_service import BrainService
 from ragmind_api.modules.chat.controller.chat.brainful_chat import (
-    BrainfulChat,
     validate_authorization,
+    BrainfulChat,
 )
 from ragmind_api.modules.chat.dto.chats import ChatItem, ChatQuestion
 from ragmind_api.modules.chat.dto.inputs import (
@@ -23,8 +23,8 @@ from ragmind_api.modules.chat.service.chat_service import ChatService
 from ragmind_api.modules.dependencies import get_service
 from ragmind_api.modules.knowledge.repository.knowledges import KnowledgeRepository
 from ragmind_api.modules.prompt.service.prompt_service import PromptService
+from ragmind_api.modules.rag_service import RAGService
 from ragmind_api.modules.user.entity.user_identity import UserIdentity
-from ragmind_api.packages.ragmind_core.rag_service import RAGService
 from ragmind_api.packages.utils.telemetry import maybe_send_telemetry
 from ragmind_api.vectorstore.supabase import CustomSupabaseVectorStore
 

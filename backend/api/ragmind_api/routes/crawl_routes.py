@@ -49,7 +49,7 @@ async def crawl_endpoint(
             user_id=current_user.id,
             bulk_id=bulk_id,
             status=NotificationsStatusEnum.INFO,
-            title=f"Processing Crawl {crawl_website.url}",
+            title=f"{crawl_website.url}",
             category="crawl",
             brain_id=str(brain_id),
         )
@@ -67,6 +67,7 @@ async def crawl_endpoint(
     process_crawl_and_notify.delay( # type: ignore
         crawl_website_url=crawl_website.url,
         brain_id=brain_id,
+        knowledge_id=added_knowledge.id,
         notification_id=upload_notification.id,
     )
 

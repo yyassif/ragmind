@@ -3,7 +3,7 @@ name: production
 services:
   frontend:
     image: yyassif/ragmind-frontend:latest
-    pull_policy: if_not_present
+    pull_policy: always
     container_name: web
     restart: always
     environment:
@@ -20,10 +20,11 @@ services:
 
   backend-core:
     image: yyassif/ragmind-backend:latest
-    pull_policy: if_not_present
+    pull_policy: always
     container_name: backend-core
     restart: always
     environment:
+      - LOG_LEVEL=${LOG_LEVEL}
       - DEV_MODE=${DEV_MODE}
       - AUTHENTICATE=${AUTHENTICATE}
       - TELEMETRY_ENABLED=${TELEMETRY_ENABLED}
@@ -65,6 +66,8 @@ services:
       - GOOGLE_AUTH_PROVIDER_CERT_URL=${GOOGLE_AUTH_PROVIDER_CERT_URL}
       - GOOGLE_JAVASCRIPT_ORIGINS=${GOOGLE_JAVASCRIPT_ORIGINS}
       - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
+      - DROPBOX_APP_KEY=${DROPBOX_APP_KEY}
+      - DROPBOX_APP_SECRET=${DROPBOX_APP_SECRET}
       - SHAREPOINT_CLIENT_ID=${SHAREPOINT_CLIENT_ID}
       - CRAWL_DEPTH=${CRAWL_DEPTH}
       - PROJECT_ID=${PROJECT_ID}
@@ -91,12 +94,15 @@ services:
     ports:
       - 6379:6379
 
-  worker:
-    pull_policy: if_not_present
+  notifier:
     image: yyassif/ragmind-backend:latest
-    container_name: worker
+    container_name: notifier
+    pull_policy: always
     restart: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
+      - LOG_LEVEL=${LOG_LEVEL}
       - DEV_MODE=${DEV_MODE}
       - AUTHENTICATE=${AUTHENTICATE}
       - TELEMETRY_ENABLED=${TELEMETRY_ENABLED}
@@ -138,6 +144,70 @@ services:
       - GOOGLE_AUTH_PROVIDER_CERT_URL=${GOOGLE_AUTH_PROVIDER_CERT_URL}
       - GOOGLE_JAVASCRIPT_ORIGINS=${GOOGLE_JAVASCRIPT_ORIGINS}
       - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
+      - DROPBOX_APP_KEY=${DROPBOX_APP_KEY}
+      - DROPBOX_APP_SECRET=${DROPBOX_APP_SECRET}
+      - SHAREPOINT_CLIENT_ID=${SHAREPOINT_CLIENT_ID}
+      - CRAWL_DEPTH=${CRAWL_DEPTH}
+      - PROJECT_ID=${PROJECT_ID}
+      - SUPABASE_DB_PASSWORD=${SUPABASE_DB_PASSWORD}
+      - SUPABASE_ACCESS_TOKEN=${SUPABASE_ACCESS_TOKEN}
+    command:
+      - "python"
+      - "/code/api/ragmind_api/celery_monitor.py"
+    depends_on:
+      - redis
+      - worker
+
+  worker:
+    image: yyassif/ragmind-backend:latest
+    pull_policy: always
+    container_name: worker
+    restart: always
+    environment:
+      - LOG_LEVEL=${LOG_LEVEL}
+      - DEV_MODE=${DEV_MODE}
+      - AUTHENTICATE=${AUTHENTICATE}
+      - TELEMETRY_ENABLED=${TELEMETRY_ENABLED}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - PG_DATABASE_ASYNC_URL=${PG_DATABASE_ASYNC_URL}
+      - PG_DATABASE_URL=${PG_DATABASE_URL}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - CELEBRY_BROKER_QUEUE_NAME=${CELEBRY_BROKER_QUEUE_NAME}
+      - CI_TEST_API_KEY=${CI_TEST_API_KEY}
+      - TELEMETRY_URL=${TELEMETRY_URL}
+      - APPLICATION_DOMAIN=${APPLICATION_DOMAIN}
+      - BACKEND_URL=${BACKEND_URL}
+      - AWS_ARN_KEY_ID=${AWS_ARN_KEY_ID}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - RESEND_EMAIL_ADDRESS=${RESEND_EMAIL_ADDRESS}
+      - RESEND_CONTACT_SALES_FROM=${RESEND_CONTACT_SALES_FROM}
+      - RESEND_CONTACT_SALES_TO=${RESEND_CONTACT_SALES_TO}
+      - NEXT_PUBLIC_SENTRY_DSN=${NEXT_PUBLIC_SENTRY_DSN}
+      - SENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - COHERE_API_KEY=${COHERE_API_KEY}
+      - LANGCHAIN_TRACING_V2=${LANGCHAIN_TRACING_V2}
+      - LANGCHAIN_ENDPOINT=${LANGCHAIN_ENDPOINT}
+      - LANGCHAIN_API_KEY=${LANGCHAIN_API_KEY}
+      - LANGCHAIN_PROJECT=${LANGCHAIN_PROJECT}
+      - LLAMA_CLOUD_API_KEY=${LLAMA_CLOUD_API_KEY}
+      - BRAVE_SEARCH_API_KEY=${BRAVE_SEARCH_API_KEY}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_PROJECT_ID=${GOOGLE_PROJECT_ID}
+      - GOOGLE_AUTH_URI=${GOOGLE_AUTH_URI}
+      - GOOGLE_TOKEN_URI=${GOOGLE_TOKEN_URI}
+      - GOOGLE_AUTH_PROVIDER_CERT_URL=${GOOGLE_AUTH_PROVIDER_CERT_URL}
+      - GOOGLE_JAVASCRIPT_ORIGINS=${GOOGLE_JAVASCRIPT_ORIGINS}
+      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
+      - DROPBOX_APP_KEY=${DROPBOX_APP_KEY}
+      - DROPBOX_APP_SECRET=${DROPBOX_APP_SECRET}
       - SHAREPOINT_CLIENT_ID=${SHAREPOINT_CLIENT_ID}
       - CRAWL_DEPTH=${CRAWL_DEPTH}
       - PROJECT_ID=${PROJECT_ID}
@@ -151,10 +221,11 @@ services:
 
   beat:
     image: yyassif/ragmind-backend:latest
-    pull_policy: if_not_present
+    pull_policy: always
     container_name: beat
     restart: always
     environment:
+      - LOG_LEVEL=${LOG_LEVEL}
       - DEV_MODE=${DEV_MODE}
       - AUTHENTICATE=${AUTHENTICATE}
       - TELEMETRY_ENABLED=${TELEMETRY_ENABLED}
@@ -196,6 +267,8 @@ services:
       - GOOGLE_AUTH_PROVIDER_CERT_URL=${GOOGLE_AUTH_PROVIDER_CERT_URL}
       - GOOGLE_JAVASCRIPT_ORIGINS=${GOOGLE_JAVASCRIPT_ORIGINS}
       - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
+      - DROPBOX_APP_KEY=${DROPBOX_APP_KEY}
+      - DROPBOX_APP_SECRET=${DROPBOX_APP_SECRET}
       - SHAREPOINT_CLIENT_ID=${SHAREPOINT_CLIENT_ID}
       - CRAWL_DEPTH=${CRAWL_DEPTH}
       - PROJECT_ID=${PROJECT_ID}
@@ -209,10 +282,11 @@ services:
 
   flower:
     image: yyassif/ragmind-backend:latest
-    pull_policy: if_not_present
+    pull_policy: always
     container_name: flower
     restart: always
     environment:
+      - LOG_LEVEL=${LOG_LEVEL}
       - DEV_MODE=${DEV_MODE}
       - AUTHENTICATE=${AUTHENTICATE}
       - TELEMETRY_ENABLED=${TELEMETRY_ENABLED}
@@ -254,6 +328,8 @@ services:
       - GOOGLE_AUTH_PROVIDER_CERT_URL=${GOOGLE_AUTH_PROVIDER_CERT_URL}
       - GOOGLE_JAVASCRIPT_ORIGINS=${GOOGLE_JAVASCRIPT_ORIGINS}
       - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
+      - DROPBOX_APP_KEY=${DROPBOX_APP_KEY}
+      - DROPBOX_APP_SECRET=${DROPBOX_APP_SECRET}
       - SHAREPOINT_CLIENT_ID=${SHAREPOINT_CLIENT_ID}
       - CRAWL_DEPTH=${CRAWL_DEPTH}
       - PROJECT_ID=${PROJECT_ID}

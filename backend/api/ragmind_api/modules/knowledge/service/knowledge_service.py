@@ -2,7 +2,7 @@ from uuid import UUID
 
 from ragmind_api.logger import get_logger
 from ragmind_api.modules.knowledge.dto.inputs import CreateKnowledgeProperties, KnowledgeStatus
-from ragmind_api.modules.knowledge.entity.knowledge import Knowledge
+from ragmind_core.models import RAGMindKnowledge as Knowledge
 from ragmind_api.modules.knowledge.repository.knowledge_interface import (
     KnowledgeInterface,
 )

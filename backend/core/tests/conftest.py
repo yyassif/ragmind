@@ -1,5 +1,7 @@
 import json
 import os
+from pathlib import Path
+from uuid import uuid4
 
 import pytest
 from langchain_core.embeddings import DeterministicFakeEmbedding
@@ -10,6 +12,39 @@ from langchain_core.vectorstores import InMemoryVectorStore
 
 from ragmind_core.config import LLMEndpointConfig
 from ragmind_core.llm import LLMEndpoint
+from ragmind_core.storage.file import FileExtension, RAGMindFile
+
+
+@pytest.fixture(scope="function")
+def temp_data_file(tmp_path):
+    data = "This is some test data."
+    temp_file = tmp_path / "data.txt"
+    temp_file.write_text(data)
+    return temp_file
+
+
+@pytest.fixture(scope="function")
+def ragmind_txt(temp_data_file):
+    return RAGMindFile(
+        id=uuid4(),
+        brain_id=uuid4(),
+        original_filename=temp_data_file.name,
+        path=temp_data_file,
+        file_extension=FileExtension.txt,
+        file_md5="123",
+    )
+
+
+@pytest.fixture
+def ragmind_pdf():
+    return RAGMindFile(
+        id=uuid4(),
+        brain_id=uuid4(),
+        original_filename="dummy.pdf",
+        path=Path("./tests/processor/data/dummy.pdf"),
+        file_extension=FileExtension.pdf,
+        file_md5="13bh234jh234",
+    )
 
 
 @pytest.fixture
@@ -33,15 +68,7 @@ def chunks_stream_answer():
 
 @pytest.fixture(autouse=True)
 def openai_api_key():
-    os.environ["OPENAI_API_KEY"] = "sk-..."
-
-
-@pytest.fixture(scope="function")
-def temp_data_file(tmp_path):
-    data = "This is some test data."
-    temp_file = tmp_path / "data.txt"
-    temp_file.write_text(data)
-    return temp_file
+    os.environ["OPENAI_API_KEY"] = "abcd"
 
 
 @pytest.fixture

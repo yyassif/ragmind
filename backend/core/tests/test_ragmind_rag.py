@@ -23,7 +23,7 @@ def mock_chain_qa_stream(monkeypatch, chunks_stream_answer):
 
 
 @pytest.mark.asyncio
-async def test_ragminndqarag(
+async def test_ragmindqarag(
     mem_vector_store, full_response, mock_chain_qa_stream, openai_api_key
 ):
     # Making sure the model
@@ -60,7 +60,7 @@ async def test_ragminndqarag(
         r.metadata.model_dump() == default_metadata for r in stream_responses[:-1]
     )
     last_response = stream_responses[-1]
-    # TODO(@aminediro) : test responses with sources
+    # TODO : test responses with sources
     assert last_response.metadata.sources == []
     assert last_response.metadata.citations == []
     assert last_response.metadata.thoughts and len(last_response.metadata.thoughts) > 0

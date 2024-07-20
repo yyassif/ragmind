@@ -5,8 +5,12 @@ from ragmind_api.logger import get_logger
 from ragmind_api.modules.knowledge.repository.storage import Storage
 from ragmind_api.modules.sync.repository.sync_files import SyncFiles
 from ragmind_api.modules.sync.service.sync_service import SyncService, SyncUserService
-from ragmind_api.modules.sync.utils.googleutils import GoogleSyncUtils
-from ragmind_api.modules.sync.utils.sharepointutils import AzureSyncUtils
+from ragmind_api.modules.sync.utils.sync import (
+    AzureDriveSync,
+    DropboxSync,
+    GoogleDriveSync,
+)
+from ragmind_api.modules.sync.utils.syncutils import SyncUtils
 
 logger = get_logger(__name__)
 
@@ -23,19 +27,30 @@ async def _process_sync_active():
     sync_files_repo_service = SyncFiles()
     storage = Storage()
 
-    google_sync_utils = GoogleSyncUtils(
+    google_sync_utils = SyncUtils(
         sync_user_service=sync_user_service,
         sync_active_service=sync_active_service,
         sync_files_repo=sync_files_repo_service,
         storage=storage,
+        sync_cloud=GoogleDriveSync(),
     )
 
-    azure_sync_utils = AzureSyncUtils(
+    azure_sync_utils = SyncUtils(
         sync_user_service=sync_user_service,
         sync_active_service=sync_active_service,
         sync_files_repo=sync_files_repo_service,
         storage=storage,
+        sync_cloud=AzureDriveSync(),
     )
+
+    dropbox_sync_utils = SyncUtils(
+        sync_user_service=sync_user_service,
+        sync_active_service=sync_active_service,
+        sync_files_repo=sync_files_repo_service,
+        storage=storage,
+        sync_cloud=DropboxSync(),
+    )
+
     active = await sync_active_service.get_syncs_active_in_interval()
 
     for sync in active:
@@ -43,16 +58,20 @@ async def _process_sync_active():
             details_user_sync = sync_user_service.get_sync_user_by_id(
                 sync.syncs_user_id
             )
-            if details_user_sync["provider"].lower() == "google":
+            if details_user_sync["provider"].lower() == "google": # type: ignore
                 await google_sync_utils.sync(
                     sync_active_id=sync.id, user_id=sync.user_id
                 )
-            elif details_user_sync["provider"].lower() == "azure":
+            elif details_user_sync["provider"].lower() == "azure": # type: ignore
                 await azure_sync_utils.sync(
                     sync_active_id=sync.id, user_id=sync.user_id
                 )
+            elif details_user_sync["provider"].lower() == "dropbox": # type: ignore
+                await dropbox_sync_utils.sync(
+                    sync_active_id=sync.id, user_id=sync.user_id
+                )
             else:
-                logger.info("Provider not supported: %s", details_user_sync["provider"])
+                logger.info("Provider not supported: %s", details_user_sync["provider"]) # type: ignore
         except Exception as e:
             logger.error(f"Error syncing: {e}")
             continue

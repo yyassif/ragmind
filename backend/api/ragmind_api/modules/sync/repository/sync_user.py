@@ -8,9 +8,10 @@ from ragmind_api.modules.notification.service.notification_service import (
 )
 from ragmind_api.modules.sync.dto.inputs import SyncsUserInput, SyncUserUpdateInput
 from ragmind_api.modules.sync.repository.sync_interfaces import SyncUserInterface
-from ragmind_api.modules.sync.utils.list_files import (
-    get_google_drive_files,
-    list_azure_files,
+from ragmind_api.modules.sync.utils.sync import (
+    AzureDriveSync,
+    DropboxSync,
+    GoogleDriveSync,
 )
 
 notification_service = NotificationService()
@@ -71,7 +72,7 @@ class SyncUser(SyncUserInterface):
         logger.warning("No sync user found for sync_id: %s", sync_id)
         return None
 
-    def get_syncs_user(self, user_id: str, sync_user_id: int = None):
+    def get_syncs_user(self, user_id: str, sync_user_id: int = None): # type: ignore
         """
         Retrieve sync users from the database.
 
@@ -167,7 +168,7 @@ class SyncUser(SyncUserInterface):
         self,
         sync_active_id: int,
         user_id: str,
-        folder_id: str = None,
+        folder_id: str = None, # type: ignore
         recursive: bool = False,
     ):
         """
@@ -204,14 +205,20 @@ class SyncUser(SyncUserInterface):
         provider = sync_user["provider"].lower()
         if provider == "google":
             logger.info("Getting files for Google sync")
-            return {
-                "files": get_google_drive_files(sync_user["credentials"], folder_id)
-            }
+            sync = GoogleDriveSync()
+            return {"files": sync.get_files(sync_user["credentials"], folder_id)}
         elif provider == "azure":
             logger.info("Getting files for Azure sync")
+            sync = AzureDriveSync()
             return {
-                "files": list_azure_files(
-                    sync_user["credentials"], folder_id, recursive
+                "files": sync.get_files(sync_user["credentials"], folder_id, recursive)
+            }
+        elif provider == "dropbox":
+            logger.info("Getting files for Drop Box sync")
+            sync = DropboxSync()
+            return {
+                "files": sync.get_files(
+                    sync_user["credentials"], folder_id if folder_id else "", recursive
                 )
             }
         else:

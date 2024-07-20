@@ -36,7 +36,8 @@ logging.basicConfig(level=logging.INFO)
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("LiteLLM").setLevel(logging.WARNING)
 logging.getLogger("litellm").setLevel(logging.WARNING)
-litellm.set_verbose = False
+get_logger("ragmind_core")
+litellm.set_verbose = False # type: ignore
 
 
 logger = get_logger(__name__)

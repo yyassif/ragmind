@@ -1,12 +1,7 @@
 import logging
 from typing import Any, List, Tuple, no_type_check
 
-from langchain_core.messages import (
-    AIMessage,
-    BaseMessage,
-    HumanMessage,
-    SystemMessage,
-)
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from langchain_core.messages.ai import AIMessageChunk
 from langchain_core.prompts import format_document
 
@@ -21,8 +16,7 @@ from ragmind_core.prompts import DEFAULT_DOCUMENT_PROMPT
 # TODO : define a types packages where we clearly define IO types
 # This should be used for serialization/deseriallization later
 
-logger = logging.getLogger(__name__)
-
+logger = logging.getLogger("ragmind_core")
 
 def model_supports_function_calling(model_name: str):
     models_supporting_function_calls = [
@@ -91,7 +85,7 @@ def get_prev_message_str(msg: AIMessageChunk) -> str:
 
 
 # TODO: CONVOLUTED LOGIC !
-# TODO(@aminediro): redo this
+# TODO: redo this
 @no_type_check
 def parse_chunk_response(
     rolling_msg: AIMessageChunk,

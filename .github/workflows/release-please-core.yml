@@ -28,7 +28,7 @@ jobs:
 
       - name: Run release-please
         id: release
-        uses: google-github-actions/release-please-action@v4
+        uses: googleapis/release-please-action@v4
         with:
           path: backend/core
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}

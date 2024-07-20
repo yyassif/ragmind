@@ -1,4 +1,5 @@
 import os
+import uuid
 from typing import List
 
 from fastapi import APIRouter, Depends, status
@@ -11,6 +12,7 @@ from ragmind_api.modules.notification.service.notification_service import (
 )
 from ragmind_api.modules.sync.controller.azure_sync_routes import azure_sync_router
 from ragmind_api.modules.sync.controller.google_sync_routes import google_sync_router
+from ragmind_api.modules.sync.controller.dropbox_sync_routes import dropbox_sync_router
 from ragmind_api.modules.sync.dto import SyncsDescription
 from ragmind_api.modules.sync.dto.inputs import SyncsActiveInput, SyncsActiveUpdateInput
 from ragmind_api.modules.sync.dto.outputs import AuthMethodEnum
@@ -36,6 +38,7 @@ sync_router = APIRouter()
 # Add Google routes here
 sync_router.include_router(google_sync_router)
 sync_router.include_router(azure_sync_router)
+sync_router.include_router(dropbox_sync_router)
 
 
 # Google sync description
@@ -51,6 +54,11 @@ azure_sync = SyncsDescription(
     auth_method=AuthMethodEnum.URI_WITH_CALLBACK,
 )
 
+dropbox_sync = SyncsDescription(
+    name="DropBox",
+    description="Sync your DropBox Drive with RAGMind",
+    auth_method=AuthMethodEnum.URI_WITH_CALLBACK,
+)
 
 @sync_router.get(
     "/sync/all",
@@ -69,7 +77,7 @@ async def get_syncs(current_user: UserIdentity = Depends(get_current_user)):
         List[SyncsDescription]: A list of available sync descriptions.
     """
     logger.debug(f"Fetching all sync descriptions for user: {current_user.id}")
-    return [google_sync, azure_sync]
+    return [google_sync, azure_sync, dropbox_sync]
 
 
 @sync_router.get(
@@ -144,9 +152,10 @@ async def create_sync_active(
         CreateNotification(
             user_id=current_user.id,
             status=NotificationsStatusEnum.SUCCESS,
-            title="Sync created! Synchronization takes a few minutes to complete",
-            description="Syncing your files...",
-            category="sync",
+            title="Synchronization created! ",
+            description="Your brain is preparing to sync files. This may take a few minutes before proceeding.",
+            category="generic",
+            bulk_id=uuid.uuid4(),
             brain_id=sync_active_input.brain_id,
         )
     )
@@ -160,7 +169,7 @@ async def create_sync_active(
     tags=["Sync"],
 )
 async def update_sync_active(
-    sync_id: str,
+    sync_id: int,
     sync_active_input: SyncsActiveUpdateInput,
     current_user: UserIdentity = Depends(get_current_user),
 ):
@@ -178,13 +187,17 @@ async def update_sync_active(
     logger.debug(
         f"Updating active sync for user: {current_user.id} with data: {sync_active_input}"
     )
+
+    details_sync_active = sync_service.get_details_sync_active(sync_id)
     notification_service.add_notification(
         CreateNotification(
             user_id=current_user.id,
             status=NotificationsStatusEnum.SUCCESS,
             title="Sync updated! Synchronization takes a few minutes to complete",
             description="Syncing your files...",
-            category="sync",
+            category="generic",
+            bulk_id=uuid.uuid4(),
+            brain_id=details_sync_active["brain_id"],  # type: ignore
         )
     )
     sync_active_input.force_sync = True
@@ -198,7 +211,7 @@ async def update_sync_active(
     tags=["Sync"],
 )
 async def delete_sync_active(
-    sync_id: str, current_user: UserIdentity = Depends(get_current_user)
+    sync_id: int, current_user: UserIdentity = Depends(get_current_user)
 ):
     """
     Delete an existing active sync for the current user.
@@ -213,12 +226,17 @@ async def delete_sync_active(
     logger.debug(
         f"Deleting active sync for user: {current_user.id} with sync ID: {sync_id}"
     )
+
+    details_sync_active = sync_service.get_details_sync_active(sync_id)
     notification_service.add_notification(
         CreateNotification(
             user_id=current_user.id,
             status=NotificationsStatusEnum.SUCCESS,
             title="Sync deleted!",
             description="Sync deleted!",
+            category="generic",
+            bulk_id=uuid.uuid4(),
+            brain_id=details_sync_active["brain_id"],  # type: ignore
         )
     )
     sync_service.delete_sync_active(sync_id, str(current_user.id))

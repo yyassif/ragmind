@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from ragmind_api.models.settings import get_supabase_client
 from ragmind_api.modules.knowledge.dto.inputs import KnowledgeStatus
 from ragmind_api.modules.knowledge.dto.outputs import DeleteKnowledgeResponse
-from ragmind_api.modules.knowledge.entity.knowledge import Knowledge
+from ragmind_core.models import RAGMindKnowledge as Knowledge
 from ragmind_api.modules.knowledge.repository.knowledge_interface import (
     KnowledgeInterface,
 )

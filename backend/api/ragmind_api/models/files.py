@@ -42,8 +42,11 @@ class File(BaseModel):
         """
         logger.info(f"Computing documents from file {self.file_name}")
         loader = loader_class(self.tmp_file_path)
-        documents = []
-        documents.extend(loader.load())
+
+        loaded_content = loader.load()
+        documents = (
+            [loaded_content] if not isinstance(loaded_content, list) else loaded_content
+        )
 
         text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
             chunk_size=self.chunk_size, chunk_overlap=self.chunk_overlap
@@ -80,7 +83,8 @@ class File(BaseModel):
             brain_id (str): Brain id
         """
         response = self.supabase_db.get_brain_vectors_by_brain_id_and_file_sha1(
-            brain_id, self.file_sha1  # type: ignore
+            brain_id,
+            self.file_sha1  # type: ignore
         )
 
         if len(response.data) == 0:
