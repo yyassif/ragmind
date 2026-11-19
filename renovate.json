@@ -15,10 +15,10 @@
       "matchManagers": [
         "poetry"
       ],
-      "matchPackagePatterns": [
+      "rangeStrategy": "widen",
+      "matchPackageNames": [
         "*"
-      ],
-      "rangeStrategy": "widen"
+      ]
     },
     {
       "matchFileNames": [
@@ -36,5 +36,7 @@
   "prConcurrentLimit": 5,
   "minimumReleaseAge": "3 days",
   "prCreation": "not-pending",
-  "dependencyDashboard": true
+  "dependencyDashboard": {
+    "enabled": true
+  }
 }
